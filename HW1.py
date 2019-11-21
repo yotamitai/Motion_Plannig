@@ -1,5 +1,6 @@
 import argparse
 import os
+import math
 from typing import List, Tuple
 
 from Plotter import Plotter
@@ -14,7 +15,20 @@ def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
     :param r: The radius of the rhombus
     :return: The polygon composed from the Minkowsky sums
     """
-    pass
+
+    # find all vertices of Minkowski sum of obsticle with robot
+    # (we can use .convex_hull attribute of Polygon for reducing number of points to calculate)
+    # original_vertices = [x for x in original_shape.exterior.coords]
+    original_vertices = [x for x in original_shape.convex_hull.exterior.coords]
+    minkowski_vertices = []
+    for x, y in original_vertices:
+        minkowski_vertices.append([x, y + r])
+        minkowski_vertices.append([x, y - r])
+        minkowski_vertices.append([x - r, y])
+        minkowski_vertices.append([x - r, y])
+
+    # once points are obtained we can create and return a new polygon
+    return Polygon(minkowski_vertices)
 
 
 # TODO
@@ -43,7 +57,8 @@ def get_points_and_dist(line):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("Robot", help="A file that holds the starting position of the robot, and the distance from the center of the robot to any of its vertices")
+    parser.add_argument("Robot",
+                        help="A file that holds the starting position of the robot, and the distance from the center of the robot to any of its vertices")
     parser.add_argument("Obstacles", help="A file that contains the obstacles in the map")
     parser.add_argument("Query", help="A file that contains the ending position for the robot.")
     args = parser.parse_args()
@@ -88,7 +103,7 @@ if __name__ == '__main__':
         dest = tuple(map(float, f.readline().split(',')))
 
     lines = get_visibility_graph(c_space_obstacles, source, dest)
-    #TODO: fill in the next line
+    # TODO: fill in the next line
     shortest_path, cost = None, None
 
     plotter3 = Plotter()
@@ -97,6 +112,5 @@ if __name__ == '__main__':
     plotter3.add_robot(dest, dist)
     plotter3.add_visibility_graph(lines)
     plotter3.add_shorterst_path(list(shortest_path))
-
 
     plotter3.show_graph()
