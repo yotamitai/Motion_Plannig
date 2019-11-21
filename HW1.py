@@ -24,11 +24,12 @@ def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
     for x, y in original_vertices:
         minkowski_vertices.append([x, y + r])
         minkowski_vertices.append([x, y - r])
-        minkowski_vertices.append([x - r, y])
+        minkowski_vertices.append([x + r, y])
         minkowski_vertices.append([x - r, y])
 
     # once points are obtained we can create and return a new polygon
-    return Polygon(minkowski_vertices)
+    convex_hull_minkowski = [x for x in Polygon(minkowski_vertices).convex_hull.exterior.coords]
+    return Polygon(convex_hull_minkowski)
 
 
 # TODO
