@@ -7,7 +7,6 @@ from Plotter import Plotter
 from shapely.geometry.polygon import Polygon, LineString
 
 
-# TODO
 def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
     """
     Get the polygon representing the Minkowsky sum
@@ -32,7 +31,6 @@ def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
     return Polygon(convex_hull_minkowski)
 
 
-# TODO
 def get_visibility_graph(obstacles: List[Polygon], source=None, dest=None) -> List[LineString]:
     """
     Get The visibility graph of a given map
@@ -41,7 +39,14 @@ def get_visibility_graph(obstacles: List[Polygon], source=None, dest=None) -> Li
     :param dest: The destination of the query. None for part 1.
     :return: A list of LineStrings holding the edges of the visibility graph
     """
-    pass
+
+    line_string_list = []
+    for o in obstacles:
+        for i in range(len(o.boundary.coords)-1):
+            line_string_list.append(LineString([o.boundary.coords[i], o.boundary.coords[i+1]]))
+
+    return line_string_list
+
 
 
 def is_valid_file(parser, arg):
