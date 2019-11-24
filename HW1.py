@@ -21,6 +21,7 @@ def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
     original_vertices = [x for x in original_shape.convex_hull.exterior.coords]
     minkowski_vertices = []
     for x, y in original_vertices:
+        #TODO: is it r or sqrt(2)*r?
         minkowski_vertices.append([x, y + r])
         minkowski_vertices.append([x, y - r])
         minkowski_vertices.append([x + r, y])
