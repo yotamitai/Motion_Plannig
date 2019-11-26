@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 from Plotter import Plotter
 from shapely.geometry.polygon import Polygon, LineString
+from itertools import combinations
 
 
 def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
@@ -40,13 +41,30 @@ def get_visibility_graph(obstacles: List[Polygon], source=None, dest=None) -> Li
     :return: A list of LineStrings holding the edges of the visibility graph
     """
 
-    line_string_list = []
+    added_line_strings = []
+
+    """get lines between vertices of same obstacle"""
     for o in obstacles:
-        for i in range(len(o.boundary.coords)-1):
-            line_string_list.append(LineString([o.boundary.coords[i], o.boundary.coords[i+1]]))
+        for i in range(len(o.boundary.coords) - 1):
+            added_line_strings.append(LineString([o.boundary.coords[i], o.boundary.coords[i + 1]]))
 
-    return line_string_list
+    for o1, o2 in combinations(range(len(obstacles)), 2):
+        for v1 in obstacles[o1].boundary.coords:
+            for v2 in obstacles[o2].boundary.coords:
+                new_edge = LineString([v1, v2])
+                no_intersection = True
+                for edge in added_line_strings:
+                    if edge.intersection(new_edge):
+                        if edge.intersection(new_edge).coords[0] not in [v1, v2]:
+                            """interdection found"""
+                            no_intersection = False
+                            break
+                if no_intersection:
+                    added_line_strings.append(new_edge)
 
+    print()
+
+    return added_line_strings
 
 
 def is_valid_file(parser, arg):
