@@ -2,10 +2,18 @@ import argparse
 import os
 import math
 from typing import List, Tuple
-
+import numpy as np
 from Plotter import Plotter
 from shapely.geometry.polygon import Polygon, LineString
 from itertools import combinations
+from dijkstra import Graph, dijsktra
+# from collections import defaultdict
+
+def shrink_polygon(p: Polygon, rate = 0.99) -> Polygon:
+    translated_vertices = [(np.array(v) - np.array(p.centroid)) for v in p.boundary.coords]
+    scaled_vertices = [item*rate for item in translated_vertices]
+    retranslated_vertices = [(item + np.array(p.centroid)) for item in scaled_vertices]
+    return Polygon(retranslated_vertices)
 
 
 def get_minkowsky_sum(original_shape: Polygon, r: float) -> Polygon:
@@ -42,30 +50,46 @@ def get_visibility_graph(obstacles: List[Polygon], source=None, dest=None) -> Li
     :return: A list of LineStrings holding the edges of the visibility graph
     """
 
-    added_line_strings = []
-
-    """get lines between vertices of same obstacle"""
+    vertices = []
+    line_strings = []
+    if source and dest:
+        vertices += [source, dest]
     for o in obstacles:
-        for i in range(len(o.boundary.coords) - 1):
-            added_line_strings.append(LineString([o.boundary.coords[i], o.boundary.coords[i + 1]]))
+        vertices += list(o.boundary.coords)
+    scaled_obstacles = [shrink_polygon(o) for o in obstacles]
+    for v1, v2 in combinations(vertices, 2):
+        new_edge = LineString([v1, v2])
+        edge_not_intersecting = True
+        for o in scaled_obstacles:
+            if not(o.intersection(new_edge).is_empty):
+                edge_not_intersecting = False
+                break
+        if edge_not_intersecting:
+            line_strings.append(new_edge)
 
-    for o1, o2 in combinations(range(len(obstacles)), 2):
-        for v1 in obstacles[o1].boundary.coords:
-            for v2 in obstacles[o2].boundary.coords:
-                new_edge = LineString([v1, v2])
-                no_intersection = True
-                for edge in added_line_strings:
-                    if edge.intersection(new_edge):
-                        if edge.intersection(new_edge).coords[0] not in [v1, v2]:
-                            """interdection found"""
-                            no_intersection = False
-                            break
-                if no_intersection:
-                    added_line_strings.append(new_edge)
 
-    print()
+    # """get lines between vertices of same obstacle"""
+    # for o in obstacles:
+    #     for i in range(len(o.boundary.coords) - 1):
+    #         obstacle_line_strings.append(LineString([o.boundary.coords[i], o.boundary.coords[i + 1]]))
+    #
+    # all_line_strings = obstacle_line_strings[:]
+    #
+    # for o1, o2 in combinations(range(len(obstacles)), 2):
+    #     for v1 in obstacles[o1].boundary.coords:
+    #         for v2 in obstacles[o2].boundary.coords:
+    #             new_edge = LineString([v1, v2])
+    #             no_intersection = True
+    #             for edge in obstacle_line_strings:
+    #                 if edge.intersection(new_edge):
+    #                     if edge.intersection(new_edge).coords[0] not in [v1, v2]:
+    #                         """interdection found"""
+    #                         no_intersection = False
+    #                         break
+    #             if no_intersection:
+    #                 all_line_strings.append(new_edge)
 
-    return added_line_strings
+    return line_strings
 
 
 def is_valid_file(parser, arg):
@@ -129,8 +153,24 @@ if __name__ == '__main__':
 
     lines = get_visibility_graph(c_space_obstacles, source, dest)
     # TODO: fill in the next line
-    shortest_path, cost = None, None
+    graph = Graph()
+    for l in lines:
+        graph.add_node(l.coords[0])
+        graph.add_node(l.coords[1])
+        graph.add_edge(l.coords[0], l.coords[1], l.length)
+        graph.add_edge(l.coords[1], l.coords[0], l.length)
+    visited, path = dijsktra(graph, source)
+    shortest_path = []
+    curr = dest
+    while True:
+        shortest_path.insert(0, curr)
+        if curr == source:
+            break
+        curr = path[curr]
 
+    cost = visited[dest]
+    # shortest_path, cost = None, None
+    
     plotter3 = Plotter()
     plotter3.add_robot(source, dist)
     plotter3.add_obstacles(workspace_obstacles)
