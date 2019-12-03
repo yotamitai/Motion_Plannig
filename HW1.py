@@ -10,7 +10,7 @@ from dijkstra import Graph, dijsktra
 # from collections import defaultdict
 
 def shrink_polygon(p: Polygon, rate = 0.99) -> Polygon:
-    translated_vertices = [(np.array(v) - np.array(p.centroid)) for v in p.boundary.coords]
+    translated_vertices = [(np.array(v) - np.array(p.centroid)) for v in p.exterior.coords]
     scaled_vertices = [item*rate for item in translated_vertices]
     retranslated_vertices = [(item + np.array(p.centroid)) for item in scaled_vertices]
     return Polygon(retranslated_vertices)
@@ -55,7 +55,7 @@ def get_visibility_graph(obstacles: List[Polygon], source=None, dest=None) -> Li
     if source and dest:
         vertices += [source, dest]
     for o in obstacles:
-        vertices += list(o.boundary.coords)
+        vertices += list(o.exterior.coords)
     scaled_obstacles = [shrink_polygon(o) for o in obstacles]
     for v1, v2 in combinations(vertices, 2):
         new_edge = LineString([v1, v2])
@@ -66,28 +66,6 @@ def get_visibility_graph(obstacles: List[Polygon], source=None, dest=None) -> Li
                 break
         if edge_not_intersecting:
             line_strings.append(new_edge)
-
-
-    # """get lines between vertices of same obstacle"""
-    # for o in obstacles:
-    #     for i in range(len(o.boundary.coords) - 1):
-    #         obstacle_line_strings.append(LineString([o.boundary.coords[i], o.boundary.coords[i + 1]]))
-    #
-    # all_line_strings = obstacle_line_strings[:]
-    #
-    # for o1, o2 in combinations(range(len(obstacles)), 2):
-    #     for v1 in obstacles[o1].boundary.coords:
-    #         for v2 in obstacles[o2].boundary.coords:
-    #             new_edge = LineString([v1, v2])
-    #             no_intersection = True
-    #             for edge in obstacle_line_strings:
-    #                 if edge.intersection(new_edge):
-    #                     if edge.intersection(new_edge).coords[0] not in [v1, v2]:
-    #                         """interdection found"""
-    #                         no_intersection = False
-    #                         break
-    #             if no_intersection:
-    #                 all_line_strings.append(new_edge)
 
     return line_strings
 
