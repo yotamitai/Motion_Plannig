@@ -1,5 +1,5 @@
 import numpy
-from RRTTree import RRTTree
+from HW2.RRTTree import RRTTree
 
 class RRTPlanner(object):
 
@@ -16,9 +16,18 @@ class RRTPlanner(object):
         # Start with adding the start configuration to the tree.
         self.tree.AddVertex(start_config)
 
+        while True:
+            self.tree.AddVertex()
+            self.tree.GetNearestVertex()
+            self.tree.AddEdge()
+
         # TODO (student): Implement your planner here.
         plan.append(start_config)
         plan.append(goal_config)
+
+
+
+
         return numpy.array(plan)
 
     def extend(self):

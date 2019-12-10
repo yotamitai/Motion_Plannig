@@ -12,7 +12,7 @@ from IPython import embed
 def main(planning_env, planner, start, goal):
 
     # Notify.
-    input('Press any key to begin planning')
+    # input('Press any key to begin planning')
 
     # Plan.
     plan = planner.Plan(start, goal)
