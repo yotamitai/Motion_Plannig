@@ -2,10 +2,10 @@
 
 import argparse, numpy, time
 
-from MapEnvironment import MapEnvironment
-from RRTPlanner import RRTPlanner
-from RRTStarPlanner import RRTStarPlanner
-from AStarPlanner import AStarPlanner
+from HW2.MapEnvironment import MapEnvironment
+from HW2.RRTPlanner import RRTPlanner
+from HW2.RRTStarPlanner import RRTStarPlanner
+from HW2.AStarPlanner import AStarPlanner
 
 from IPython import embed
 
