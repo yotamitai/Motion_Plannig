@@ -19,24 +19,29 @@ class RRTPlanner(object):
         # get list of all samples (shuffle)
 
         seen = set()
-        bais = 0.2  # TODO need also bias = 0.05
+        bais = 0.05  # TODO  bias = 0.05, 0.2
 
         # get samples until goal is found
         new_vertex = self.get_sample(seen, bais, goal_config)
         while new_vertex:
-            if new_vertex == goal_config:
-                break
-            new_vertex_id = self.tree.AddVertex(new_vertex)
             nearest_vertex_id, nearest_vertex = self.tree.GetNearestVertex(new_vertex)
+            new_vertex_id = self.tree.AddVertex(new_vertex)
             self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
-            new_sample = self.get_sample(seen, bais, goal_config)
+            if new_vertex == goal_config:
+                goal_vertex_id = new_vertex_id
+                break
+            print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
+            new_vertex = self.get_sample(seen, bais, goal_config)
 
-        # TODO (student): Implement your planner here.
-        plan.append(start_config)
-        # add rest of plan
+        # get the plan from goal to start
         plan.append(goal_config)
+        parent_vertex_id = self.tree.edges[goal_vertex_id]
+        while parent_vertex_id:
+            plan.append(self.tree.vertices[parent_vertex_id])
+            parent_vertex_id = self.tree.edges[parent_vertex_id]
+        plan.append(start_config)
 
-        return numpy.array(plan)
+        return numpy.array(plan[::-1])
 
     def extend(self):
         # TODO (student): Implement an extend logic.
