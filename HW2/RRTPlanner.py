@@ -13,7 +13,7 @@ class RRTPlanner(object):
         seen = []
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
-        epsilon = 10  # TODO: E1, E2
+        epsilon = 20  # TODO: E1, E2
         # Initialize an empty plan.
         plan = []
         # Start with adding the start configuration to the tree.
@@ -68,8 +68,8 @@ class RRTPlanner(object):
             new_sample = goal_config
         else:
             while True:
-                sample_x_coord = numpy.random.random_integers(1, self.planning_env.xlimit[1])
-                sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1])
+                sample_x_coord = numpy.random.random_integers(1, self.planning_env.xlimit[1]-1) # TODO: fix for weird map setup
+                sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1]-1)
                 new_sample = [sample_x_coord, sample_y_coord]
                 if new_sample not in seen:
                     break
