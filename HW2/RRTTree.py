@@ -1,7 +1,6 @@
 import operator
 import numpy
 
-
 class RRTTree(object):
 
     def __init__(self, planning_env):
@@ -41,9 +40,10 @@ class RRTTree(object):
 
         dists = numpy.array(dists)
         knnIDs = numpy.argpartition(dists, k)
-        knnDists = {i: dists[i] for i in knnIDs}
+        knnDists = [dists[i] for i in knnIDs]
 
-        return knnIDs, [self.vertices[vid] for vid in knnIDs], knnDists
+        return knnIDs, [self.vertices[vid] for vid in knnIDs]
+
 
     def AddVertex(self, config):
         '''

@@ -14,36 +14,44 @@ class RRTStarPlanner(object):
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
         epsilon = 10  # TODO: E1, E2
-        k = 3
+        k = 5
         # Initialize an empty plan.
         plan = []
         # Start with adding the start configuration to the tree.
         self.tree.AddVertex(start_config)
+        # initialize a dict of distances of vertices from the start
+        root_dist = {0: 0}
 
         # get samples until goal is found
         new_vertex = []
         while new_vertex != goal_config:
             rand_vertex = self.get_sample(seen, bais, goal_config)
-            if len(seen) > k:
-                nearest_vertices_id, nearest_vertices, nearest_vertices_dist = self.tree.GetKNN(rand_vertex, k)
-            else:
-                nearest_vertices = seen
-                nearest_vertices_id = list(range(len(nearest_vertices)))
-                nearest_vertices_dist = {i: self.planning_env.compute_distance(rand_vertex, x)
-                                         for i, x in enumerate(self.tree.vertices)}
-
-            sorted_nearest_vertices_dist = sorted([(y, x) for x, y in nearest_vertices_dist.items()])
-            new_vertices = {tuple(x): self.extend(x, rand_vertex, epsilon) for x in nearest_vertices}
-            best_neighbour_indx = self.collision_free(nearest_vertices, sorted_nearest_vertices_dist, new_vertices)
-            if best_neighbour_indx is not False:  # vid can be 0, so need the 'is not False' syntax
-                new_vertex = new_vertices[tuple(nearest_vertices[best_neighbour_indx])]
+            nearest_vertex_id, nearest_vertex = self.tree.GetNearestVertex(rand_vertex)
+            new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
+            if self.collision_free(nearest_vertex, new_vertex):
                 seen.append(new_vertex)
                 new_vertex_id = self.tree.AddVertex(new_vertex)
-                self.tree.AddEdge(nearest_vertices_id[best_neighbour_indx], new_vertex_id)
+                root_dist[new_vertex_id] = self.planning_env.compute_distance(start_config, new_vertex)
+                self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
                 print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
+
+                # Rewire
+                if len(seen) > k:
+                    nearest_vertices_id, nearest_vertices = self.tree.GetKNN(rand_vertex, k)
+                    # sort the neighbours by distance to the root node
+                    sorted_by_dist_neighbours_ids = [x[1] for x in
+                                                     sorted([(root_dist[x], x) for x in nearest_vertices_id])]
+                    for neighbour_id in sorted_by_dist_neighbours_ids:
+                        neighbour_coord = self.tree.vertices[neighbour_id]
+                        if self.collision_free(neighbour_coord, new_vertex):
+                            distance = self.planning_env.compute_distance(neighbour_coord, new_vertex)
+                            if self.get_plan_cost(neighbour_id) + distance < self.get_plan_cost(new_vertex_id):
+                                self.tree.AddEdge(neighbour_id, new_vertex_id)
+                                break  # TODO not sure about this break
+                                # oren said that by checking the neighbours in a sorted fashion
+                                # we can reduce the number of neighbours to check
             else:
                 new_vertex = []
-
         goal_vertex_id = new_vertex_id
 
         # get the plan from goal to start
@@ -81,16 +89,25 @@ class RRTStarPlanner(object):
                     break
         return new_sample
 
-    def collision_free(self, knn, knn_dist_dict, new):
+    def collision_free(self, near, new):
         # create a line between the coords and check which coords are in between
-        for val, vid in knn_dist_dict:
-            line = set(zip([int(x) for x in numpy.linspace(self.tree.vertices[vid][0], new[tuple(knn[vid])][0], 1000)],
-                           [int(x) for x in numpy.linspace(self.tree.vertices[vid][1], new[tuple(knn[vid])][1], 1000)]))
-            # check if any of the coords along th line are obstacles
-            if not [1 for x, y in line if self.planning_env.map[x][y]]:
-                return vid
-        return False
+        line = set(zip([int(x) for x in numpy.linspace(near[0], new[0], 1000)],
+                       [int(x) for x in numpy.linspace(near[1], new[1], 1000)]))
+        # check if any of the coords along th line are obstacles
+        if [1 for x, y in line if self.planning_env.map[x][y]]:
+            return False
+        else:
+            return True
 
     def ShortenPath(self, path):
         # TODO (student): Postprocessing of the plan.
         return path
+
+    def get_plan_cost(self, vid):
+        path_cost = 0
+        while vid != 0:
+            child_coord = self.tree.vertices[vid]
+            vid = self.tree.edges[vid]
+            parent_coord = self.tree.vertices[vid]
+            path_cost += self.planning_env.compute_distance(parent_coord, child_coord)
+        return path_cost
