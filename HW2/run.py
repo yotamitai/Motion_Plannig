@@ -54,7 +54,7 @@ if __name__ == "__main__":
         planner = AStarPlanner(planning_env)
     elif args.planner == 'rrt':
         planner = RRTPlanner(planning_env)
-    elif args.planner == 'rrtconnect':
+    elif args.planner == 'rrtstar':
         planner = RRTStarPlanner(planning_env)
     else:
         print('Unknown planner option: %s' % args.planner)
