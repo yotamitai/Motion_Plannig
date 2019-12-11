@@ -9,6 +9,12 @@ from HW2.AStarPlanner import AStarPlanner
 
 from IPython import embed
 
+"""
+configurations:
+-m map1.txt -p rrt -s 1 1 -g 4 5
+-m map2.txt -p astar -s 321 148 -g 106 202
+"""
+
 def main(planning_env, planner, start, goal):
 
     # Notify.
@@ -20,7 +26,7 @@ def main(planning_env, planner, start, goal):
     # Shortcut the path.
     # TODO (student): Do not shortcut when comparing the performance of algorithms. 
     # Comment this line out when collecting data over performance metrics.
-    plan_short = planner.ShortenPath(plan)
+    # plan_short = planner.ShortenPath(plan)
 
     # Visualize the final path.
     planning_env.visualize_plan(plan)
