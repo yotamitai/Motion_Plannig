@@ -34,6 +34,7 @@ class AStarPlanner(object):
             distances = [numpy.linalg.norm((numpy.array(node) - numpy.array(n))) for n in neighbors]
             return neighbors, distances
 
+        w = 5
         open_list = []
         parent_dict = {}
         gscore_dict = defaultdict(lambda: self.INF)
@@ -50,7 +51,6 @@ class AStarPlanner(object):
         while open_list:
             # find the node that minimizes f and pop it
             f_list = [fscore_dict[node] for node in open_list]
-            print(list(zip(open_list, f_list)))
             idx = numpy.argmin(f_list)
             current = open_list.pop(idx)
             # goal check
@@ -61,7 +61,7 @@ class AStarPlanner(object):
                 if (gscore_dict[current] + cost) < gscore_dict[child]:
                     gscore_dict[child] = gscore_dict[current] + cost
                     parent_dict[child] = current
-                    fscore_dict[child] = _get_h(child) + gscore_dict[child]
+                    fscore_dict[child] = w*_get_h(child) + gscore_dict[child]
                     if not(child in open_list):
                         open_list.append(child)
         return numpy.array([])

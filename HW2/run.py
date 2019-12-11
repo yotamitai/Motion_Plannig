@@ -21,7 +21,11 @@ def main(planning_env, planner, start, goal):
     # input('Press any key to begin planning')
 
     # Plan.
+    import time
+    t0 = time.time()
     plan = planner.Plan(start, goal)
+    t1 = time.time()
+    dt = t1-t0
 
     # Shortcut the path.
     # TODO (student): Do not shortcut when comparing the performance of algorithms. 
