@@ -22,13 +22,10 @@ class MapEnvironment(object):
 
     def compute_distance(self, start_config, end_config):
 
-        #
-        # TODO: Implement a function which computes the distance between
-        # two configurations.
-        #
-        # Note: most probably eucledean distance.
-        pass
+        # Done: Implement a function which computes the distance between two configurations.
 
+        # Note: most probably eucledean distance.
+        return numpy.sqrt((start_config[0] - end_config[0]) ** 2 + (start_config[1] - end_config[1]) ** 2)
 
     def state_validity_checker(self, config):
         # DONE: Implement a state validity checker
@@ -65,7 +62,7 @@ class MapEnvironment(object):
         '''
         plt.imshow(self.map, interpolation='nearest')
         for i in range(numpy.shape(plan)[0] - 1):
-            x = [plan[i,0], plan[i+1, 0]]
-            y = [plan[i,1], plan[i+1, 1]]
+            x = [plan[i, 0], plan[i + 1, 0]]
+            y = [plan[i, 1], plan[i + 1, 1]]
             plt.plot(y, x, 'k')
         plt.show()
