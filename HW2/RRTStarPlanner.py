@@ -58,10 +58,6 @@ class RRTStarPlanner(object):
     def extend(self, near, new, step_size):
         # Done: Implement an extend logic.
 
-        # quick fix...
-        if near == new:
-            return False
-
         if step_size:
             norm = self.planning_env.compute_distance(near, new)
             direction = [(new[0] - near[0]) / norm, (new[1] - near[1]) / norm]
@@ -77,13 +73,12 @@ class RRTStarPlanner(object):
             new_sample = goal_config
         else:
             while True:
-                sample_x_coord = numpy.random.random_integers(1, self.planning_env.xlimit[1])
-                sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1])
+                # TODO: fix for weird map setup
+                sample_x_coord = numpy.random.random_integers(1, self.planning_env.xlimit[1]) - 1
+                sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1]) - 1
                 new_sample = [sample_x_coord, sample_y_coord]
                 if new_sample not in seen:
                     break
-                else:
-                    print()
         return new_sample
 
     def collision_free(self, knn, knn_dist_dict, new):
