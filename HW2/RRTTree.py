@@ -1,10 +1,11 @@
 import operator
 import numpy
 
+
 class RRTTree(object):
-    
+
     def __init__(self, planning_env):
-        
+
         self.planning_env = planning_env
         self.vertices = []
         self.edges = dict()
@@ -27,7 +28,7 @@ class RRTTree(object):
         vid, vdist = min(enumerate(dists), key=operator.itemgetter(1))
 
         return vid, self.vertices[vid]
-            
+
     def GetKNN(self, config, k):
         '''
         Return k-nearest neighbors
@@ -40,10 +41,9 @@ class RRTTree(object):
 
         dists = numpy.array(dists)
         knnIDs = numpy.argpartition(dists, k)
-        knnDists = [dists[i] for i in knnIDs]
+        knnDists = {i: dists[i] for i in knnIDs}
 
-        return knnIDs, [self.vertices[vid] for vid in knnIDs]
-
+        return knnIDs, [self.vertices[vid] for vid in knnIDs], knnDists
 
     def AddVertex(self, config):
         '''

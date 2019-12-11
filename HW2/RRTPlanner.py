@@ -25,10 +25,11 @@ class RRTPlanner(object):
             rand_vertex = self.get_sample(seen, bais, goal_config)
             nearest_vertex_id, nearest_vertex = self.tree.GetNearestVertex(rand_vertex)
             new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
-            # quick fix... # TODO: vertices that already seen re-appear (althoug 'seen' should take care of this)
-            if not new_vertex:
-                continue
+            # # quick fix... # TODO: vertices that already seen re-appear (althoug 'seen' should take care of this)
+            # if not new_vertex:
+            #     continue
             if self.collision_free(nearest_vertex, new_vertex):
+                seen.append(new_vertex)
                 new_vertex_id = self.tree.AddVertex(new_vertex)
                 self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
                 print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
@@ -48,9 +49,9 @@ class RRTPlanner(object):
     def extend(self, near, new, step_size):
         # Done: Implement an extend logic.
 
-        # quick fix...
-        if near == new:
-            return False
+        # # quick fix...
+        # if near == new:
+        #     return False
 
         if step_size:
             norm = self.planning_env.compute_distance(near, new)
@@ -71,19 +72,15 @@ class RRTPlanner(object):
                 sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1])
                 new_sample = [sample_x_coord, sample_y_coord]
                 if new_sample not in seen:
-                    seen.append(new_sample)
                     break
-                else:
-                    print()
         return new_sample
 
     def collision_free(self, near, new):
         # create a line between the coords and check which coords are in between
         line = set(zip([int(x) for x in numpy.linspace(near[0], new[0], 1000)],
-            [int(x) for x in numpy.linspace(near[1], new[1], 1000)]))
+                       [int(x) for x in numpy.linspace(near[1], new[1], 1000)]))
         # check if any of the coords along th line are obstacles
-        if [1 for x,y in line if self.planning_env.map[x][y]]:
+        if [1 for x, y in line if self.planning_env.map[x][y]]:
             return False
         else:
             return True
-

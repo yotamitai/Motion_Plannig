@@ -2,6 +2,7 @@ import numpy
 from IPython import embed
 from matplotlib import pyplot as plt
 
+
 class MapEnvironment(object):
 
     def __init__(self, mapfile, start, goal):
@@ -9,7 +10,7 @@ class MapEnvironment(object):
         # Obtain the boundary limits.
         # Check if file exists.
         self.map = numpy.loadtxt(mapfile)
-        self.xlimit = [1, numpy.shape(self.map)[0]] # TODO (avk): Check if this needs to flip.
+        self.xlimit = [1, numpy.shape(self.map)[0]]  # TODO (avk): Check if this needs to flip.
         self.ylimit = [1, numpy.shape(self.map)[1]]
 
         # Check if start and goal are within limits and collision free
@@ -35,15 +36,11 @@ class MapEnvironment(object):
         if False in [in_range_x, in_range_y]:
             return False
         else:
-            not_in_obstacle = not(bool(self.map[config[0], config[1]]))
+            not_in_obstacle = not (bool(self.map[config[0], config[1]]))
             return not_in_obstacle
 
-    def edge_validity_checker(self, config1, config2):
-
-        #
-        # TODO: Implement an edge validity checker
-        #
-        #
+    def edge_validity_checker(self, config1, config2, rrt=None):
+        # defined in each planner as collision_free()
         pass
 
     def compute_heuristic(self, config):

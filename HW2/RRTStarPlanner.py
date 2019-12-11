@@ -1,20 +1,20 @@
 import numpy
 from HW2.RRTTree import RRTTree
 
+
 class RRTStarPlanner(object):
 
     def __init__(self, planning_env):
         self.planning_env = planning_env
         self.tree = RRTTree(self.planning_env)
-        
 
-    def Plan(self, start_config, goal_config, epsilon = 0.001):
+    def Plan(self, start_config, goal_config, epsilon=0.001):
         # run parameters
         seen = []
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
         epsilon = 10  # TODO: E1, E2
-        k= 3
+        k = 3
         # Initialize an empty plan.
         plan = []
         # Start with adding the start configuration to the tree.
@@ -24,17 +24,26 @@ class RRTStarPlanner(object):
         new_vertex = []
         while new_vertex != goal_config:
             rand_vertex = self.get_sample(seen, bais, goal_config)
-            nearest_vertex_id, nearest_vertex = self.tree.GetKNN(rand_vertex, k)
-            new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
-            # quick fix... # TODO: vertices that already seen re-appear (althoug 'seen' should take care of this)
-            if not new_vertex:
-                continue
-            if self.collision_free(nearest_vertex, new_vertex):
+            if len(seen) > k:
+                nearest_vertices_id, nearest_vertices, nearest_vertices_dist = self.tree.GetKNN(rand_vertex, k)
+            else:
+                nearest_vertices = seen
+                nearest_vertices_id = list(range(len(nearest_vertices)))
+                nearest_vertices_dist = {i: self.planning_env.compute_distance(rand_vertex, x)
+                                         for i, x in enumerate(self.tree.vertices)}
+
+            sorted_nearest_vertices_dist = sorted([(y, x) for x, y in nearest_vertices_dist.items()])
+            new_vertices = {tuple(x): self.extend(x, rand_vertex, epsilon) for x in nearest_vertices}
+            best_neighbour_indx = self.collision_free(nearest_vertices, sorted_nearest_vertices_dist, new_vertices)
+            if best_neighbour_indx is not False:  # vid can be 0, so need the 'is not False' syntax
+                new_vertex = new_vertices[tuple(nearest_vertices[best_neighbour_indx])]
+                seen.append(new_vertex)
                 new_vertex_id = self.tree.AddVertex(new_vertex)
-                self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
+                self.tree.AddEdge(nearest_vertices_id[best_neighbour_indx], new_vertex_id)
                 print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
             else:
                 new_vertex = []
+
         goal_vertex_id = new_vertex_id
 
         # get the plan from goal to start
@@ -72,21 +81,20 @@ class RRTStarPlanner(object):
                 sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1])
                 new_sample = [sample_x_coord, sample_y_coord]
                 if new_sample not in seen:
-                    seen.append(new_sample)
                     break
                 else:
                     print()
         return new_sample
 
-    def collision_free(self, near, new):
+    def collision_free(self, knn, knn_dist_dict, new):
         # create a line between the coords and check which coords are in between
-        line = set(zip([int(x) for x in numpy.linspace(near[0], new[0], 1000)],
-            [int(x) for x in numpy.linspace(near[1], new[1], 1000)]))
-        # check if any of the coords along th line are obstacles
-        if [1 for x,y in line if self.planning_env.map[x][y]]:
-            return False
-        else:
-            return True
+        for val, vid in knn_dist_dict:
+            line = set(zip([int(x) for x in numpy.linspace(self.tree.vertices[vid][0], new[tuple(knn[vid])][0], 1000)],
+                           [int(x) for x in numpy.linspace(self.tree.vertices[vid][1], new[tuple(knn[vid])][1], 1000)]))
+            # check if any of the coords along th line are obstacles
+            if not [1 for x, y in line if self.planning_env.map[x][y]]:
+                return vid
+        return False
 
     def ShortenPath(self, path):
         # TODO (student): Postprocessing of the plan.
