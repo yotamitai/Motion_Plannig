@@ -25,6 +25,7 @@ class RRTPlanner(object):
         new_vertex = self.get_sample(seen, bais, goal_config)
         while new_vertex:
             nearest_vertex_id, nearest_vertex = self.tree.GetNearestVertex(new_vertex)
+
             new_vertex_id = self.tree.AddVertex(new_vertex)
             self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
             if new_vertex == goal_config:

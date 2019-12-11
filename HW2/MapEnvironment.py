@@ -32,7 +32,7 @@ class MapEnvironment(object):
         # DONE: Implement a state validity checker
         # Return true if valid.
         not_in_obstacle = not (bool(self.map[config[0], config[1]]))
-        in_range_x = self.xlimit[0] <= config[0] <= self.xlimit[1]
+        in_range_x = self.xlimit[0] <= config[1] <= self.xlimit[1]
         in_range_y = self.ylimit[0] <= config[0] <= self.ylimit[1]
         return not_in_obstacle and in_range_x and in_range_y
 
