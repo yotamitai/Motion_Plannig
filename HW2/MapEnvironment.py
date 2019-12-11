@@ -3,7 +3,7 @@ from IPython import embed
 from matplotlib import pyplot as plt
 
 class MapEnvironment(object):
-    
+
     def __init__(self, mapfile, start, goal):
 
         # Obtain the boundary limits.
@@ -21,7 +21,7 @@ class MapEnvironment(object):
         plt.imshow(self.map, interpolation='nearest')
 
     def compute_distance(self, start_config, end_config):
-        
+
         #
         # TODO: Implement a function which computes the distance between
         # two configurations.
@@ -33,10 +33,13 @@ class MapEnvironment(object):
     def state_validity_checker(self, config):
         # DONE: Implement a state validity checker
         # Return true if valid.
-        not_in_obstacle = not(bool(self.map[config[0], config[1]]))
-        in_range_x = self.xlimit[0] < config[0] < self.xlimit[1]
-        in_range_y = self.ylimit[0] < config[0] < self.ylimit[1]
-        return not_in_obstacle and in_range_x and in_range_y
+        in_range_x = self.xlimit[0] <= config[0] < self.xlimit[1]
+        in_range_y = self.ylimit[0] <= config[1] < self.ylimit[1]
+        if False in [in_range_x, in_range_y]:
+            return False
+        else:
+            not_in_obstacle = not(bool(self.map[config[0], config[1]]))
+            return not_in_obstacle
 
     def edge_validity_checker(self, config1, config2):
 
@@ -47,11 +50,13 @@ class MapEnvironment(object):
         pass
 
     def compute_heuristic(self, config):
-        
+
         #
         # TODO: Implement a function to compute heuristic.
         #
-        pass
+        start, goal = config
+        h = numpy.linalg.norm((numpy.array(start) - numpy.array(goal)))
+        return h
 
     def visualize_plan(self, plan):
         '''
