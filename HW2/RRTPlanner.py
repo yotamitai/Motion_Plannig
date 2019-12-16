@@ -14,7 +14,8 @@ class RRTPlanner(object):
         seen = []
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
-        epsilon = 20  # TODO: E1, E2 # 0 = extend all the way
+        epsilon = 10  # TODO: E1, E2 # 0 = extend all the way
+        verbose = False
         # Initialize an empty plan.
         plan = []
         # Start with adding the start configuration to the tree.
@@ -31,7 +32,8 @@ class RRTPlanner(object):
                 plt.plot(new_vertex[1], new_vertex[0], 'o', color='b')
                 new_vertex_id = self.tree.AddVertex(new_vertex)
                 self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
-                print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
+                if verbose:
+                    print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
             else:
                 new_vertex = []
         goal_vertex_id = new_vertex_id
