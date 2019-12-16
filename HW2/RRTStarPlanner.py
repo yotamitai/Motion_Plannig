@@ -15,7 +15,7 @@ class RRTStarPlanner(object):
         seen = []
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
-        epsilon = 10  # TODO: E1, E2
+        epsilon = 10  # TODO: E1, E2 # 0 = extend all the way
         k = 5
         verbose = False
         # Initialize an empty plan.
@@ -24,6 +24,7 @@ class RRTStarPlanner(object):
         self.tree.AddVertex(start_config)
         # initialize a dict of distances of vertices from the start
         root_dist = {0: 0}
+        plt.plot(start_config[1], start_config[0], 'o', color='b')
 
         # get samples until goal is found
         new_vertex = []
@@ -42,7 +43,7 @@ class RRTStarPlanner(object):
 
                 # Rewire
                 if len(seen) > k:
-                    nearest_vertices_id, nearest_vertices = self.tree.GetKNN(rand_vertex, k)
+                    nearest_vertices_id, nearest_vertices = self.tree.GetKNN(rand_vertex, k)[:k]
                     # sort the neighbours by distance to the root node
                     sorted_by_dist_neighbours_ids = [x[1] for x in
                                                      sorted([(root_dist[x], x) for x in nearest_vertices_id])]
@@ -61,6 +62,7 @@ class RRTStarPlanner(object):
 
         # get the plan from goal to start
         plan.append(goal_config)
+        plt.plot(goal_config[1], goal_config[0], 'o', color='b')
         parent_vertex_id = self.tree.edges[goal_vertex_id]
         while parent_vertex_id:
             plan.append(self.tree.vertices[parent_vertex_id])

@@ -15,8 +15,8 @@ configurations:
 -m map2.txt -p astar -s 321 148 -g 106 202
 """
 
-def main(planning_env, planner, start, goal):
 
+def main(planning_env, planner, start, goal):
     # Notify.
     # input('Press any key to begin planning')
 
@@ -25,7 +25,7 @@ def main(planning_env, planner, start, goal):
     t0 = time.time()
     plan = planner.Plan(start, goal)
     t1 = time.time()
-    dt = t1-t0
+    dt = t1 - t0
 
     # Shortcut the path.
     # TODO (student): Do not shortcut when comparing the performance of algorithms. 
@@ -38,11 +38,11 @@ def main(planning_env, planner, start, goal):
 
 
 if __name__ == "__main__":
-    
+
     parser = argparse.ArgumentParser(description='script for testing planners')
 
     parser.add_argument('-m', '--map', type=str, default='map1.txt',
-                        help='The environment to plan on')    
+                        help='The environment to plan on')
     parser.add_argument('-p', '--planner', type=str, default='rrt',
                         help='The planner to run (star, rrt, rrtstar)')
     parser.add_argument('-s', '--start', nargs='+', type=int, required=True)
@@ -64,4 +64,10 @@ if __name__ == "__main__":
         print('Unknown planner option: %s' % args.planner)
         exit(0)
 
-    main(planning_env, planner, args.start, args.goal)
+    num_tests = 1  # for running averages
+    run_time_list = []
+    for i in range(num_tests):
+        start = time.time()
+        main(planning_env, planner, args.start, args.goal)
+        run_time_list.append(time.time() - start)
+    print(sum(run_time_list)/len(run_time_list))

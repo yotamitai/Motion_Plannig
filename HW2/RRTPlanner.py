@@ -14,7 +14,7 @@ class RRTPlanner(object):
         seen = []
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
-        epsilon = 20  # TODO: E1, E2
+        epsilon = 20  # TODO: E1, E2 # 0 = extend all the way
         # Initialize an empty plan.
         plan = []
         # Start with adding the start configuration to the tree.
