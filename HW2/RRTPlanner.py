@@ -1,5 +1,6 @@
 import numpy
 from HW2.RRTTree import RRTTree
+from matplotlib import pyplot as plt
 
 
 class RRTPlanner(object):
@@ -27,6 +28,7 @@ class RRTPlanner(object):
             new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
             if self.collision_free(nearest_vertex, new_vertex):
                 seen.append(new_vertex)
+                plt.plot(new_vertex[1], new_vertex[0], 'o', color='b')
                 new_vertex_id = self.tree.AddVertex(new_vertex)
                 self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
                 print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')

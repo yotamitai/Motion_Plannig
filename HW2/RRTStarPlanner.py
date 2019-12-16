@@ -1,5 +1,7 @@
 import numpy
 from HW2.RRTTree import RRTTree
+from matplotlib import pyplot as plt
+
 
 
 class RRTStarPlanner(object):
@@ -15,6 +17,7 @@ class RRTStarPlanner(object):
         bais = 0.2  # TODO  bias = 0.05, 0.2
         epsilon = 10  # TODO: E1, E2
         k = 5
+        verbose = False
         # Initialize an empty plan.
         plan = []
         # Start with adding the start configuration to the tree.
@@ -30,10 +33,12 @@ class RRTStarPlanner(object):
             new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
             if self.collision_free(nearest_vertex, new_vertex):
                 seen.append(new_vertex)
+                plt.plot(new_vertex[1], new_vertex[0], 'o', color='b')
                 new_vertex_id = self.tree.AddVertex(new_vertex)
                 root_dist[new_vertex_id] = self.planning_env.compute_distance(start_config, new_vertex)
                 self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
-                print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
+                if verbose:
+                    print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
 
                 # Rewire
                 if len(seen) > k:
