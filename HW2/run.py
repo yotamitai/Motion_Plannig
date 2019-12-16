@@ -34,7 +34,8 @@ def main(planning_env, planner, start, goal):
 
     # Visualize the final path.
     planning_env.visualize_plan(plan)
-    embed()
+    # embed()
+    return dt
 
 
 if __name__ == "__main__":
@@ -67,7 +68,5 @@ if __name__ == "__main__":
     num_tests = 1  # for running averages
     run_time_list = []
     for i in range(num_tests):
-        start = time.time()
-        main(planning_env, planner, args.start, args.goal)
-        run_time_list.append(time.time() - start)
-    print(sum(run_time_list)/len(run_time_list))
+        run_time_list.append(main(planning_env, planner, args.start, args.goal))
+    print(f'Run time avgerage over {num_tests} iterations:{sum(run_time_list)/len(run_time_list)}')
