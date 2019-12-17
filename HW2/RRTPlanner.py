@@ -42,10 +42,16 @@ class RRTPlanner(object):
         # get the plan from goal to start
         plan.append(goal_config)
         parent_vertex_id = self.tree.edges[goal_vertex_id]
+        plan_cost = abs(self.planning_env.compute_distance(self.tree.vertices[goal_vertex_id],
+                                                           self.tree.vertices[parent_vertex_id]))
         while parent_vertex_id:
             plan.append(self.tree.vertices[parent_vertex_id])
+            temp = parent_vertex_id
             parent_vertex_id = self.tree.edges[parent_vertex_id]
+            plan_cost += abs(self.planning_env.compute_distance(self.tree.vertices[temp],
+                                                                self.tree.vertices[parent_vertex_id]))
         plan.append(start_config)
+        print(plan_cost, end=', ')
         return numpy.array(plan[::-1])
 
     def extend(self, near, new, step_size):
@@ -75,8 +81,9 @@ class RRTPlanner(object):
 
     def collision_free(self, near, new):
         # create a line between the coords and check which coords are in between
-        line = set(zip([int(x) for x in numpy.linspace(near[0], new[0], 1000)],
-                       [int(x) for x in numpy.linspace(near[1], new[1], 1000)]))
+        line = set(zip([int(x) for x in numpy.linspace(near[0] + 0.5, new[0] + 0.5, 1000)],
+                       [int(x) for x in numpy.linspace(near[1] + 0.5, new[1] + 0.5, 1000)]))
+        line.add(tuple(new))
         # check if any of the coords along th line are obstacles
         if [1 for x, y in line if self.planning_env.map[x][y]]:
             return False

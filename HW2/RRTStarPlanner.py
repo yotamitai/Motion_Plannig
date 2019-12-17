@@ -64,11 +64,18 @@ class RRTStarPlanner(object):
         plan.append(goal_config)
         plt.plot(goal_config[1], goal_config[0], 'o', color='b')
         parent_vertex_id = self.tree.edges[goal_vertex_id]
+        plan_cost = abs(self.planning_env.compute_distance(self.tree.vertices[goal_vertex_id],
+                                                           self.tree.vertices[parent_vertex_id]))
         while parent_vertex_id:
             plan.append(self.tree.vertices[parent_vertex_id])
+            temp = parent_vertex_id
             parent_vertex_id = self.tree.edges[parent_vertex_id]
+            plan_cost += abs(self.planning_env.compute_distance(self.tree.vertices[temp],
+                                                                self.tree.vertices[parent_vertex_id]))
         plan.append(start_config)
+        print(plan_cost, end=', ')
         return numpy.array(plan[::-1])
+
 
     def extend(self, near, new, step_size):
         # Done: Implement an extend logic.
@@ -88,7 +95,6 @@ class RRTStarPlanner(object):
             new_sample = goal_config
         else:
             while True:
-                # TODO: fix for weird map setup
                 sample_x_coord = numpy.random.random_integers(1, self.planning_env.xlimit[1]) - 1
                 sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1]) - 1
                 new_sample = [sample_x_coord, sample_y_coord]
@@ -98,13 +104,15 @@ class RRTStarPlanner(object):
 
     def collision_free(self, near, new):
         # create a line between the coords and check which coords are in between
-        line = set(zip([int(x) for x in numpy.linspace(near[0], new[0], 1000)],
-                       [int(x) for x in numpy.linspace(near[1], new[1], 1000)]))
+        line = set(zip([int(x) for x in numpy.linspace(near[0] + 0.5, new[0] + 0.5, 1000)],
+                       [int(x) for x in numpy.linspace(near[1] + 0.5, new[1] + 0.5, 1000)]))
+        line.add(tuple(new))
         # check if any of the coords along th line are obstacles
         if [1 for x, y in line if self.planning_env.map[x][y]]:
             return False
         else:
             return True
+
 
     def ShortenPath(self, path):
         # TODO (student): Postprocessing of the plan.
