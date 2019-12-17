@@ -54,19 +54,19 @@ if __name__ == "__main__":
     # First setup the environment and the robot.
     planning_env = MapEnvironment(args.map, args.start, args.goal)
 
-    # Next setup the planner
-    if args.planner == 'astar':
-        planner = AStarPlanner(planning_env)
-    elif args.planner == 'rrt':
-        planner = RRTPlanner(planning_env)
-    elif args.planner == 'rrtstar':
-        planner = RRTStarPlanner(planning_env)
-    else:
-        print('Unknown planner option: %s' % args.planner)
-        exit(0)
-
     num_tests = 1  # for running averages
     run_time_list = []
     for i in range(num_tests):
+        # Next setup the planner
+        if args.planner == 'astar':
+            planner = AStarPlanner(planning_env)
+        elif args.planner == 'rrt':
+            planner = RRTPlanner(planning_env)
+        elif args.planner == 'rrtstar':
+            planner = RRTStarPlanner(planning_env)
+        else:
+            print('Unknown planner option: %s' % args.planner)
+            exit(0)
+
         run_time_list.append(main(planning_env, planner, args.start, args.goal))
     print(f'Run time avgerage over {num_tests} iterations:{sum(run_time_list)/len(run_time_list)}')

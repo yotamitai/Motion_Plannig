@@ -13,8 +13,9 @@ class RRTPlanner(object):
         # run parameters
         seen = []
         seen.append(start_config)
+        plt.plot(start_config[1], start_config[0], 'o', color='b')
         bais = 0.2  # TODO  bias = 0.05, 0.2
-        epsilon = 10  # TODO: E1, E2 # 0 = extend all the way
+        epsilon = 4  # TODO: E1, E2 # 0 = extend all the way
         verbose = False
         # Initialize an empty plan.
         plan = []
