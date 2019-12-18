@@ -42,7 +42,7 @@ class RRTTree(object):
         knnIDs = numpy.argpartition(dists, k)
         knnDists = [dists[i] for i in knnIDs]
 
-        return knnIDs, [self.vertices[vid] for vid in knnIDs]
+        return knnIDs[:k], [self.vertices[vid] for vid in knnIDs][:k]
 
 
     def AddVertex(self, config):

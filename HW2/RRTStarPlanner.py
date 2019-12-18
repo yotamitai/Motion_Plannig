@@ -16,7 +16,7 @@ class RRTStarPlanner(object):
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
         epsilon = 10  # TODO: E1, E2 # 0 = extend all the way
-        k = 5
+        k = 'log(n)' #TODO k = 3,5, 'log(n)'
         verbose = False
         # Initialize an empty plan.
         plan = []
@@ -29,6 +29,10 @@ class RRTStarPlanner(object):
         # get samples until goal is found
         new_vertex = []
         while new_vertex != goal_config:
+            if k == 'log(n)':
+                k = int(round(numpy.log(len(self.tree.vertices))))
+                if k < 1:
+                    k = 'log(n)'
             rand_vertex = self.get_sample(seen, bais, goal_config)
             nearest_vertex_id, nearest_vertex = self.tree.GetNearestVertex(rand_vertex)
             new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
@@ -42,8 +46,10 @@ class RRTStarPlanner(object):
                     print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
 
                 # Rewire
-                if len(seen) > k:
-                    nearest_vertices_id, nearest_vertices = self.tree.GetKNN(rand_vertex, k)[:k]
+                if k == 'log(n)':
+                    continue
+                elif len(seen) > k:
+                    nearest_vertices_id, nearest_vertices = self.tree.GetKNN(rand_vertex, k)
                     # sort the neighbours by distance to the root node
                     sorted_by_dist_neighbours_ids = [x[1] for x in
                                                      sorted([(root_dist[x], x) for x in nearest_vertices_id])]
