@@ -1,7 +1,8 @@
 import numpy
 from HW2.RRTTree import RRTTree
 from matplotlib import pyplot as plt
-
+import time
+import operator
 
 
 class RRTStarPlanner(object):
@@ -13,13 +14,14 @@ class RRTStarPlanner(object):
     def Plan(self, start_config, goal_config, epsilon=0.001):
         # run parameters
         seen = []
+        best_plan = []
         seen.append(start_config)
         bais = 0.2  # TODO  bias = 0.05, 0.2
         epsilon = 10  # TODO: E1, E2 # 0 = extend all the way
-        k = 'log(n)' #TODO k = 3,5, 'log(n)'
+        k = 'log(n)'  # TODO k = 8,5, 'log(n)'
         verbose = False
-        # Initialize an empty plan.
-        plan = []
+        plan_improvement_flag = False
+        normal_run = False
         # Start with adding the start configuration to the tree.
         self.tree.AddVertex(start_config)
         # initialize a dict of distances of vertices from the start
@@ -27,13 +29,13 @@ class RRTStarPlanner(object):
         plt.plot(start_config[1], start_config[0], 'o', color='b')
 
         # get samples until goal is found
-        new_vertex = []
-        while new_vertex != goal_config:
+        new_vertex = True
+        while new_vertex:
             if k == 'log(n)':
                 k = int(round(numpy.log(len(self.tree.vertices))))
                 if k < 1:
                     k = 'log(n)'
-            rand_vertex = self.get_sample(seen, bais, goal_config)
+            rand_vertex = self.get_sample(seen, bais, goal_config, plan_improvement_flag)
             nearest_vertex_id, nearest_vertex = self.tree.GetNearestVertex(rand_vertex)
             new_vertex = self.extend(nearest_vertex, rand_vertex, epsilon)
             if self.collision_free(nearest_vertex, new_vertex):
@@ -44,34 +46,87 @@ class RRTStarPlanner(object):
                 self.tree.AddEdge(nearest_vertex_id, new_vertex_id)
                 if verbose:
                     print(f'New sample added: ({new_vertex[0]},{new_vertex[1]})')
-
                 # Rewire
-                if k == 'log(n)':
-                    continue
-                elif len(seen) > k:
-                    nearest_vertices_id, nearest_vertices = self.tree.GetKNN(rand_vertex, k)
-                    # sort the neighbours by distance to the root node
-                    sorted_by_dist_neighbours_ids = [x[1] for x in
-                                                     sorted([(root_dist[x], x) for x in nearest_vertices_id])]
-                    for neighbour_id in sorted_by_dist_neighbours_ids:
-                        neighbour_coord = self.tree.vertices[neighbour_id]
-                        if self.collision_free(neighbour_coord, new_vertex):
-                            distance = self.planning_env.compute_distance(neighbour_coord, new_vertex)
-                            if self.get_plan_cost(neighbour_id) + distance < self.get_plan_cost(new_vertex_id):
-                                self.tree.AddEdge(neighbour_id, new_vertex_id)
-                                break  # TODO not sure about this break
-                                # oren said that by checking the neighbours in a sorted fashion
-                                # we can reduce the number of neighbours to check
+                self.rewire(k, seen, new_vertex, new_vertex_id, start_config, plan_improvement_flag, best_plan)
             else:
-                new_vertex = []
-        goal_vertex_id = new_vertex_id
+                continue
 
+            if new_vertex == goal_config:
+                if normal_run:
+                    """regular run"""
+                    goal_vertex_id = new_vertex_id
+                    plt.plot(goal_config[1], goal_config[0], 'o', color='b')
+                    break
+
+                """plan improvment over time"""
+                if not plan_improvement_flag:
+                    goal_vertex_id = new_vertex_id
+                    seen.append(goal_config)
+                    plt.plot(goal_config[1], goal_config[0], 'o', color='b')
+                    start_time = time.time()
+                    plan_improvement_flag = True
+                    last_check_time = 0
+                    time_sample = 1
+                    run_time = 60
+                    best_plan, plan_cost = self.get_plan(start_config, goal_config, goal_vertex_id)
+                    time_list = [0, ]
+                    plan_costs = [plan_cost]
+                    continue
+
+            if plan_improvement_flag:
+                temp_time = time.time() - start_time
+                if temp_time > last_check_time + time_sample:
+                    best_plan, plan_cost = self.get_plan(start_config, goal_config, goal_vertex_id)
+                    last_check_time = temp_time
+                    plan_costs.append(plan_cost)
+                    time_list.append(time_list[-1] + time_sample)
+                    print(plan_cost)
+                if temp_time >= run_time:
+                    print(plan_costs)
+                    print(time_list)
+                    break
+
+        plan, plan_cost = self.get_plan(start_config, goal_config, goal_vertex_id)
+        print(plan_cost, end=', ')
+        return numpy.array(plan[::-1])
+
+    def rewire(self, k, seen, new_vertex, new_vertex_id, start_config, check_plan, plan):
+        if k == 'log(n)':
+            return
+        elif len(seen) > k+1:
+            distances = []
+            nearest_vertices_id, nearest_vertices = self.tree.GetKNN(new_vertex, k+1)
+            nearest_vertices_id = nearest_vertices_id.tolist()
+            nearest_vertices_id.remove(new_vertex_id)
+            for neighbour_id in nearest_vertices_id:
+                neighbour_coord = self.tree.vertices[neighbour_id]
+                if self.collision_free(neighbour_coord, new_vertex):
+                    _, distance = self.get_plan(start_config, neighbour_coord, neighbour_id)
+                    distances.append([distance + self.planning_env.compute_distance(neighbour_coord, new_vertex),
+                                      neighbour_id])
+            new_parent_id = sorted(distances)[0][1]
+
+            # if check_plan:
+            #     current_parent_coord = self.tree.vertices[self.tree.edges[new_vertex_id]]
+            #     if current_parent_coord in plan and self.tree.vertices[new_parent_id] != current_parent_coord:
+            #         plan_node_id = self.tree.edges[new_vertex_id]
+            #         self.tree.AddEdge(new_vertex_id, plan_node_id)
+            #         print()
+                    # TODO not working...
+
+            self.tree.AddEdge(new_parent_id, new_vertex_id)
+
+
+
+    def get_plan(self, start_config, goal_config, goal_vertex_id):
+        if start_config == goal_config:
+            return [], 0
+        # Initialize plan.
+        plan = [goal_config]
         # get the plan from goal to start
-        plan.append(goal_config)
-        plt.plot(goal_config[1], goal_config[0], 'o', color='b')
         parent_vertex_id = self.tree.edges[goal_vertex_id]
         plan_cost = abs(self.planning_env.compute_distance(self.tree.vertices[goal_vertex_id],
-                                                           self.tree.vertices[parent_vertex_id]))
+                                                       self.tree.vertices[parent_vertex_id]))
         while parent_vertex_id:
             plan.append(self.tree.vertices[parent_vertex_id])
             temp = parent_vertex_id
@@ -79,25 +134,24 @@ class RRTStarPlanner(object):
             plan_cost += abs(self.planning_env.compute_distance(self.tree.vertices[temp],
                                                                 self.tree.vertices[parent_vertex_id]))
         plan.append(start_config)
-        print(plan_cost, end=', ')
-        return numpy.array(plan[::-1])
-
+        return plan, plan_cost
 
     def extend(self, near, new, step_size):
-        # Done: Implement an extend logic.
-
         if step_size:
             norm = self.planning_env.compute_distance(near, new)
             direction = [(new[0] - near[0]) / norm, (new[1] - near[1]) / norm]
+            # try:
             step = [int(round(near[0] + direction[0] * step_size)),
                     int(round(near[1] + direction[1] * step_size))]
+            # except Exception as e:
+            #     print()
             if round(self.planning_env.compute_distance(near, step)) < round(norm):
                 return step
         return new
 
-    def get_sample(self, seen, bais, goal_config):
+    def get_sample(self, seen, bais, goal_config, plan_improvement_flag):
         # goal_bias
-        if numpy.random.sample() <= bais:
+        if numpy.random.sample() <= bais and not plan_improvement_flag:
             new_sample = goal_config
         else:
             while True:
@@ -119,7 +173,6 @@ class RRTStarPlanner(object):
         else:
             return True
 
-
     def ShortenPath(self, path):
         # TODO (student): Postprocessing of the plan.
         return path
@@ -132,3 +185,4 @@ class RRTStarPlanner(object):
             parent_coord = self.tree.vertices[vid]
             path_cost += self.planning_env.compute_distance(parent_coord, child_coord)
         return path_cost
+

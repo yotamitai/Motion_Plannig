@@ -69,4 +69,6 @@ if __name__ == "__main__":
             exit(0)
 
         run_time_list.append(main(planning_env, planner, args.start, args.goal))
-    print(f'Run time avgerage over {num_tests} iterations:{sum(run_time_list)/len(run_time_list)}')
+    print('\nRun times: ', end='')
+    print(run_time_list)
+    print(f'\nRun time avgerage over {num_tests} iterations:{sum(run_time_list)/len(run_time_list)}')
