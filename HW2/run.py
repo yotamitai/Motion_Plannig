@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # First setup the environment and the robot.
     planning_env = MapEnvironment(args.map, args.start, args.goal)
 
-    num_tests = 1  # for running averages
+    num_tests = 10  # for running averages
     run_time_list = []
     for i in range(num_tests):
         # Next setup the planner
