@@ -155,7 +155,6 @@ class RRTStarPlanner(object):
             iterations += 1
         else:
             while True:
-                iterations += 1
                 sample_x_coord = numpy.random.random_integers(1, self.planning_env.xlimit[1]) - 1
                 sample_y_coord = numpy.random.random_integers(1, self.planning_env.ylimit[1]) - 1
                 new_sample = [sample_x_coord, sample_y_coord]
@@ -186,3 +185,4 @@ class RRTStarPlanner(object):
             parent_coord = self.tree.vertices[vid]
             path_cost += self.planning_env.compute_distance(parent_coord, child_coord)
         return path_cost
+
