@@ -19,6 +19,11 @@ class Node:
         self.generated_nodes_cords.add(self.cord)
         self.parent = parent
 
+    def reset_class(self):
+        self.g = {}
+        parent = {}
+        generated_nodes_cords = set()
+
     def __eq__(self, other):
         return self.cord == other.cord
 
@@ -31,13 +36,14 @@ class Node:
 
 class OpenList:
     def __init__(self, key):
-        self.list = []
+        self.list = {}
         self.key = key
         self.min_value_item = (None, np.inf)
 
     def add(self, item):
         item_to_add = (item, self.key(item))
-        self.list.append(item_to_add)
+        if self.list.get(item, np.inf) > self.key(item): 
+            self.list[item] = self.key(item)
         if item_to_add[1] < self.min_value_item[1]:
             self.min_value_item = item_to_add
 
@@ -59,26 +65,32 @@ class OpenList:
 
     def _update_min_value_item(self):
         if self.list:
-            self.min_value_item = min(self.list, key=lambda n:n[1])
+            self.min_value_item = min(list(self.list.items()), key=lambda n:n[1])
         else:
             self.min_value_item = (None, np.inf)
 
     def remove_item(self, item_to_remove):
-        idx = 0
-        while idx < len(self.list):
-            if self.list[idx][0] == item_to_remove:
-                self.list.pop(idx)
-                continue
-            else:
-                idx += 1
-        self._update_min_value_item()
+        try:
+            self.list.pop(item_to_remove)
+            self._update_min_value_item()
+        except:
+            self._update_min_value_item()
+            pass
+        # idx = 0
+        # while idx < len(self.list):
+        #     if self.list[idx][0] == item_to_remove:
+        #         self.list.pop(idx)
+        #         continue
+        #     else:
+        #         idx += 1
+        # self._update_min_value_item()
 
     def __repr__(self):
         return f"OpenList {self.list}"
 
 
 class MultiHeuristicPlanner(object):
-    def __init__(self, planning_env, guidance, w1=20, w2=3):
+    def __init__(self, planning_env, guidance, w1=20, w2=1.5):
         """
 
         :param planning_env: The planning environment for the algorithm
@@ -86,7 +98,9 @@ class MultiHeuristicPlanner(object):
         :param w1: inflation parameter of individual searches
         :param w2: The factor of comparison between anchor heuristic and inadmissible heuristics 
         """
-        self.guidance = guidance[0]
+
+        # self.guidance = guidance[0]
+        self.guidance = (400,120) #ugly hack for the experiments
         self.planning_env = planning_env
         self.w1 = w1
         self.w2 = w2
@@ -176,9 +190,9 @@ class MultiHeuristicPlanner(object):
         def get_inadmissible_h(s: Node):
             g_is_ancestor = self.guidance in get_path(s)
             if g_is_ancestor:
-                return get_euc_h(s)
+                return compute_distance(s.cord, goal_config)
             else:
-                return get_euc_h(s) + compute_distance(s.cord, self.guidance)
+                return compute_distance(goal_config, self.guidance) + compute_distance(s.cord, self.guidance)
 
         def succ(s: Node):
             parent_cords = s.cord
@@ -190,6 +204,7 @@ class MultiHeuristicPlanner(object):
             return neighbors
 
         def expand(s: Node):
+            expanded_nodes.append(s)
             if s.cord == self.guidance:
                 pass
             # remove s from all open lists
@@ -235,6 +250,7 @@ class MultiHeuristicPlanner(object):
         inadmissible_closed_list.append(start)
 
         count_iterations = 0
+        expanded_nodes = []
         while euc_open_list.list:
             count_iterations += 1
             if count_iterations%100 == 0:
@@ -243,7 +259,7 @@ class MultiHeuristicPlanner(object):
                     self.w2 * euc_open_list.get_min_key_value():
                 if g.get(goal, np.inf) < inadmissible_open_list.get_min_key_value():
                     if g.get(goal, np.inf) < np.inf:
-                        return np.array(get_path(goal))
+                        return np.array(get_path(goal)), expanded_nodes
                 else:
                     s = inadmissible_open_list.top()
                     expand(s)
@@ -251,7 +267,7 @@ class MultiHeuristicPlanner(object):
             else:
                 if g.get(goal, np.inf) < euc_open_list.get_min_key_value():
                     if g.get(goal, np.inf) < np.inf:
-                        return np.array(get_path(goal))
+                        return np.array(get_path(goal)), expanded_nodes
                 else:
                     s = euc_open_list.top()
                     expand(s)
@@ -260,4 +276,4 @@ class MultiHeuristicPlanner(object):
         # plan.append(start_config)
         # plan.append(goal_config)
 
-        return np.array(plan)
+        return np.array(plan), expanded_nodes

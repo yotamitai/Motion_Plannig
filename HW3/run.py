@@ -6,7 +6,7 @@ from HW3.AStarPlanner import AStarPlanner
 from IPython import embed
 from HW3.MapEnvironment import MapEnvironment
 from HW3.MultiHeuristicPlanner import MultiHeuristicPlanner
-
+from matplotlib import pyplot as plt
 
 def main(planning_env, planner, start, goal):
     # Notify.
@@ -14,9 +14,11 @@ def main(planning_env, planner, start, goal):
     # planning_env.visualize_env()
 
     # Plan.
-    plan = planner.Plan(start, goal)
+    plan, expanded_nodes = planner.Plan(start, goal)
 
     # Visualize the final path.
+    for node in expanded_nodes:
+        plt.plot(node.cord[1], node.cord[0], "o", color='b')
     planning_env.visualize_plan(plan)
     exit(0)
 
